@@ -1,0 +1,14 @@
+# Global code owners
+* @jorgemejia25
+
+# Python files
+*.py @jorgemejia25
+
+# Documentation
+*.md @jorgemejia25
+DOCUMENTATION.md @jorgemejia25
+
+# Configuration files
+requirements.txt @jorgemejia25
+.gitignore @jorgemejia25
+LICENSE @jorgemejia25
