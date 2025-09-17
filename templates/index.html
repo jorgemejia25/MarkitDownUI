@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarkItDown - Convertidor de Documentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-white min-h-screen">
+    <div class="max-w-2xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-3xl font-light text-gray-900 mb-3">MarkItDown</h1>
+        <p class="text-gray-500 max-w-lg mx-auto">
+          Convierte documentos a Markdown de forma sencilla
+        </p>
+      </div>
+
+      <!-- Upload Area -->
+      <div class="mb-12">
+        <div
+          id="drop-zone"
+          class="border border-gray-200 rounded-lg p-16 hover:border-gray-400 transition-colors cursor-pointer"
+        >
+          <div class="text-center">
+            <div class="mb-6">
+              <svg
+                class="w-12 h-12 text-gray-400 mx-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-normal text-gray-700 mb-2">
+              Arrastra tu archivo aquí
+            </h3>
+            <p class="text-gray-400 mb-6">o haz clic para seleccionar</p>
+            <input
+              type="file"
+              id="file-input"
+              class="hidden"
+              accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.txt,.html,.csv,.json,.xml,.epub"
+            />
+            <button
+              id="select-file-btn"
+              class="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-md transition-colors font-normal"
+            >
+              Seleccionar Archivo
+            </button>
+          </div>
+        </div>
+
+        <!-- File Info -->
+        <div id="file-info" class="mt-6 hidden">
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div
+                  class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center"
+                >
+                  <svg
+                    class="w-4 h-4 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    ></path>
+                  </svg>
+                </div>
+                <div>
+                  <p id="file-name" class="font-normal text-gray-900"></p>
+                  <p id="file-size" class="text-sm text-gray-400"></p>
+                </div>
+              </div>
+              <button
+                id="remove-file"
+                class="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Convert Button -->
+      <div class="text-center mb-12">
+        <button
+          id="convert-btn"
+          class="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-12 py-4 rounded-md font-normal transition-colors"
+          disabled
+        >
+          <span id="convert-text">Convertir a Markdown</span>
+          <span id="convert-loading" class="hidden">
+            <svg
+              class="animate-spin -ml-1 mr-3 h-4 w-4 text-white inline"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="2"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Convirtiendo...
+          </span>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="hidden">
+        <div class="border border-gray-200 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-normal text-gray-900">Resultado</h2>
+            <div class="space-x-2">
+              <button
+                id="copy-btn"
+                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors font-normal"
+              >
+                Copiar
+              </button>
+              <button
+                id="download-btn"
+                class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md transition-colors font-normal"
+              >
+                Descargar
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-md p-4">
+            <pre
+              id="markdown-content"
+              class="whitespace-pre-wrap text-sm text-gray-700 font-mono overflow-auto max-h-80"
+            ></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div id="error-message" class="hidden">
+        <div class="bg-red-50 border border-red-200 rounded-md p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-4 w-4 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-normal text-red-800">Error</h3>
+              <div class="mt-1 text-sm text-red-700">
+                <p id="error-text"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supported Formats -->
+      <div class="mt-16">
+        <h2 class="text-lg font-normal text-gray-900 mb-6 text-center">
+          Formatos Soportados
+        </h2>
+        <div class="grid grid-cols-4 gap-4">
+          <div class="text-center p-3">
+            <div
+              class="w-8 h-8 bg-gray-100 rounded mx-auto mb-2 flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-sm font-normal text-gray-600">PDF</p>
+          </div>
+          <div class="text-center p-3">
+            <div
+              class="w-8 h-8 bg-gray-100 rounded mx-auto mb-2 flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-sm font-normal text-gray-600">Word</p>
+          </div>
+          <div class="text-center p-3">
+            <div
+              class="w-8 h-8 bg-gray-100 rounded mx-auto mb-2 flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-sm font-normal text-gray-600">PowerPoint</p>
+          </div>
+          <div class="text-center p-3">
+            <div
+              class="w-8 h-8 bg-gray-100 rounded mx-auto mb-2 flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-sm font-normal text-gray-600">Excel</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+      const selectFileBtn = document.getElementById("select-file-btn");
+      const fileInfo = document.getElementById("file-info");
+      const fileName = document.getElementById("file-name");
+      const fileSize = document.getElementById("file-size");
+      const removeFile = document.getElementById("remove-file");
+      const convertBtn = document.getElementById("convert-btn");
+      const convertText = document.getElementById("convert-text");
+      const convertLoading = document.getElementById("convert-loading");
+      const results = document.getElementById("results");
+      const markdownContent = document.getElementById("markdown-content");
+      const copyBtn = document.getElementById("copy-btn");
+      const downloadBtn = document.getElementById("download-btn");
+      const errorMessage = document.getElementById("error-message");
+      const errorText = document.getElementById("error-text");
+
+      let selectedFile = null;
+      let downloadPath = null;
+
+      // File selection
+      selectFileBtn.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", handleFileSelect);
+
+      // Drag and drop
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-gray-400", "bg-gray-50");
+      });
+
+      dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-gray-400", "bg-gray-50");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-gray-400", "bg-gray-50");
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFileSelect({ target: { files: files } });
+        }
+      });
+
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+          selectedFile = file;
+          showFileInfo(file);
+          convertBtn.disabled = false;
+          hideError();
+        }
+      }
+
+      function showFileInfo(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.remove("hidden");
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      removeFile.addEventListener("click", () => {
+        selectedFile = null;
+        fileInput.value = "";
+        fileInfo.classList.add("hidden");
+        convertBtn.disabled = true;
+        hideResults();
+        hideError();
+      });
+
+      // Convert file
+      convertBtn.addEventListener("click", async () => {
+        if (!selectedFile) return;
+
+        showLoading();
+        hideError();
+        hideResults();
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+          const response = await fetch("/convert", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            markdownContent.textContent = data.markdown_content;
+            downloadPath = data.download_path;
+            showResults();
+          } else {
+            showError(data.error);
+          }
+        } catch (error) {
+          showError("Error de conexión. Por favor, intenta de nuevo.");
+        } finally {
+          hideLoading();
+        }
+      });
+
+      function showLoading() {
+        convertText.classList.add("hidden");
+        convertLoading.classList.remove("hidden");
+        convertBtn.disabled = true;
+      }
+
+      function hideLoading() {
+        convertText.classList.remove("hidden");
+        convertLoading.classList.add("hidden");
+        convertBtn.disabled = false;
+      }
+
+      function showResults() {
+        results.classList.remove("hidden");
+      }
+
+      function hideResults() {
+        results.classList.add("hidden");
+      }
+
+      function showError(message) {
+        errorText.textContent = message;
+        errorMessage.classList.remove("hidden");
+      }
+
+      function hideError() {
+        errorMessage.classList.add("hidden");
+      }
+
+      // Copy to clipboard
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(markdownContent.textContent);
+          copyBtn.textContent = "Copiado!";
+          setTimeout(() => {
+            copyBtn.textContent = "Copiar";
+          }, 2000);
+        } catch (error) {
+          showError("No se pudo copiar al portapapeles");
+        }
+      });
+
+      // Download file
+      downloadBtn.addEventListener("click", () => {
+        if (downloadPath) {
+          window.open(downloadPath, "_blank");
+        }
+      });
+    </script>
+  </body>
+</html>
